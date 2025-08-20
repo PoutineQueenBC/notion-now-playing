@@ -1,0 +1,11 @@
+{
+  "name": "notion-now-playing-widget",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Spotify Now Playing widget for Notion (Vercel serverless + public widget)",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "node server.js"
+  },
+  "dependencies": {}
+}

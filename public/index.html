@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Now Playing</title>
+  <style>
+    :root{
+      --bg: #7B5C3B;     /* exact brown */
+      --text: #ffffff;   /* white text for contrast */
+      --muted: rgba(255,255,255,0.75);
+      --radius: 16px;
+      --shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;overflow:hidden}
+    body{
+      background: #7B5C3B !important; /* force exact brown */
+      font-family: serif;  /* Notion default serif */
+      color: var(--text);
+      display:flex;align-items:center;justify-content:center;
+      padding: 0;
+    }
+    .container{ width: 389px; } /* fixed width to match other widgets */
+    .wrap{ width: 389px; }
+    .card{
+      display:grid;
+      grid-template-columns: 72px 1fr;
+      gap:12px;
+      background: #7B5C3B;        /* same brown behind content */
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px;
+      align-items:center;
+    }
+    .cover{
+      width:72px;height:72px;border-radius:12px;object-fit:cover;background:#2a2a2a;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    }
+    .title{font-size: 18px; line-height:1.2; margin:0 0 4px 0; font-weight:600; color:#fff}
+    .artist{font-size:14px; margin:0; color: var(--muted)}
+    .footer{margin-top:8px; font-size:12px; color: var(--muted); text-align:center}
+    .empty{
+      background: #7B5C3B;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      text-align:center;
+      font-size: 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="content" class="wrap"></div>
+    <div class="footer">🎵 Now Playing</div>
+  </div>
+
+  <script>
+    async function fetchNow(){
+      try{
+        const res = await fetch("/api/now", { cache: "no-store" });
+        const el = document.getElementById("content");
+        if(res.status === 204){
+          el.innerHTML = `<div class="empty">Nothing playing right now</div>`;
+          return;
+        }
+        if(!res.ok){
+          el.innerHTML = `<div class="empty">Error fetching track</div>`;
+          return;
+        }
+        const data = await res.json();
+        const item = data && data.item;
+        if(!item){
+          el.innerHTML = `<div class="empty">Nothing playing right now</div>`;
+          return;
+        }
+        const title = item.name || "Untitled";
+        const artists = (item.artists || []).map(a => a.name).join(", ");
+        const img = item.album && item.album.images && item.album.images[1] ? item.album.images[1].url :
+                    item.album && item.album.images && item.album.images[0] ? item.album.images[0].url : "";
+        el.innerHTML = `
+          <div class="card">
+            <img class="cover" src="${img}" alt="Album art">
+            <div>
+              <p class="title">${title}</p>
+              <p class="artist">${artists}</p>
+            </div>
+          </div>
+        `;
+      }catch(e){
+        document.getElementById("content").innerHTML = `<div class="empty">Error</div>`;
+      }
+    }
+    fetchNow();
+    setInterval(fetchNow, 15000);
+  </script>
+</body>
+</html>
